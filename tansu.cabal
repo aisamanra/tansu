@@ -24,7 +24,8 @@ library
                        directory,
                        filepath,
                        base64-bytestring,
-                       containers
+                       containers,
+                       filelock
   default-language:    Haskell2010
 
 executable sample
