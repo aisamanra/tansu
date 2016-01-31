@@ -1,4 +1,5 @@
-module Database.Tansu.Backend.Ephemeral where
+module Database.Tansu.Backend.Ephemeral
+         (withEphemeralDb) where
 
 import Control.Concurrent.MVar
 import Data.ByteString (ByteString)
@@ -17,8 +18,8 @@ ephemeralSet table key val = modifyIORef table (M.insert key val)
 ephemeralGet :: IORef Table -> ByteString -> IO (Maybe ByteString)
 ephemeralGet table key = M.lookup key `fmap` readIORef table
 
-withEphemeralDatabase :: (Database -> IO a) -> IO a
-withEphemeralDatabase comp = do
+withEphemeralDb :: (Database -> IO a) -> IO a
+withEphemeralDb comp = do
   lock  <- newMVar ()
   table <- newIORef M.empty
   comp $ Database
