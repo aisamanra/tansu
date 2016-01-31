@@ -26,3 +26,9 @@ library
                        base64-bytestring,
                        containers
   default-language:    Haskell2010
+
+executable sample
+  main-is: Main.hs
+  build-depends: base, tansu
+  hs-source-dirs: sample
+  default-language: Haskell2010
