@@ -51,6 +51,23 @@ successively to the key-value mapping. Values can be set using the `set`
 command (or its operator synonym `=:`) and retrieved using the `get`
 command.
 
+~~~.haskell
+-- set a key to a value
+set   :: (Serialize k, Serialize v) => k -> v -> Tansu ()
+
+-- infix alias for set
+(=:)  :: (Serialize k, Serialize v) => k -> v -> Tansu ()
+
+-- get a value, failing if it does not exist
+get   :: (Serialize k, Serialize v) => k -> Tansu v
+
+-- get a value, returning Nothing if it does not exist
+getMb :: (Serialize k, Serialize v) => k -> Tansu (Maybe v)
+
+-- run a Tansu computation
+run   :: TansuDb -> Tansu a -> IO (Either TansuError a)
+~~~
+
 A value of type `TansuDb` should be supplied by a _backend_, which can
 correspond to any storage medium capable of storing a key-value store.
 The `tansu` library only defines two trivial storage backends—one that
