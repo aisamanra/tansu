@@ -26,5 +26,6 @@ data TansuError
 data TansuDb = TansuDb
   { dbSet            :: ByteString -> ByteString -> IO ()
   , dbGet            :: ByteString -> IO (Maybe ByteString)
+  , dbDel            :: ByteString -> IO ()
   , dbRunTransaction :: forall a. IO a -> IO a
   }

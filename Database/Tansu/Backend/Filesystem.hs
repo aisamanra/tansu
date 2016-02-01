@@ -4,7 +4,10 @@ import Data.ByteString (ByteString)
 import Data.ByteString.Base64
 import qualified Data.ByteString.Char8 as BS
 import Database.Tansu.Internal (TansuDb(..))
-import System.Directory (createDirectoryIfMissing, doesFileExist)
+import System.Directory ( createDirectoryIfMissing
+                        , doesFileExist
+                        , removeFile
+                        )
 import System.FileLock (SharedExclusive(Exclusive), withFileLock)
 import System.FilePath.Posix ((</>))
 
@@ -20,6 +23,11 @@ filePathGet path key = do
   if exists
     then Just `fmap` BS.readFile keyPath
     else return Nothing
+
+filePathDel :: FilePath -> ByteString -> IO ()
+filePathDel path key = do
+  let keyPath = path </> BS.unpack (encode key)
+  removeFile keyPath
 
 filePathLock :: FilePath -> IO a -> IO a
 filePathLock path comp = do
@@ -37,5 +45,6 @@ withFilesystemDb path comp = do
   createDirectoryIfMissing True path
   comp $ TansuDb { dbSet            = filePathSet path
                  , dbGet            = filePathGet path
+                 , dbDel            = filePathDel path
                  , dbRunTransaction = filePathLock path
                  }

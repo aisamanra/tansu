@@ -48,8 +48,8 @@ A value of type `TansuDb` represents a given key-value mapping. The only
 way to interact with a `TansuDb` is by running a `Tansu` command, which
 represents a (possibly empty) sequence of stores and loads applied
 successively to the key-value mapping. Values can be set using the `set`
-command (or its operator synonym `=:`) and retrieved using the `get`
-command.
+command (or its operator synonym `=:`), retrieved using the `get`
+command, and deleted using the `del` command.
 
 ~~~.haskell
 -- set a key to a value
@@ -63,6 +63,9 @@ get   :: (Serialize k, Serialize v) => k -> Tansu v
 
 -- get a value, returning Nothing if it does not exist
 getMb :: (Serialize k, Serialize v) => k -> Tansu (Maybe v)
+
+-- remove a key and its associated value
+del   :: (Serialize k) => k -> Tansu ()
 
 -- run a Tansu computation
 run   :: TansuDb -> Tansu a -> IO (Either TansuError a)

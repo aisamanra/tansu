@@ -7,6 +7,8 @@ module Database.Tansu ( -- * The 'Tansu' monad
                       , getMb
                       , set
                       , (=:)
+                      , del
+                        -- * Running a 'Tansu' operation
                       , run
                       ) where
 
@@ -75,6 +77,11 @@ getMb key = do
     Just bs -> case decode bs of
       Right val' -> return (Just val')
       Left err   -> Tansu (raise (DecodeError err))
+
+del :: (Serialize k) => k -> Tansu ()
+del key = do
+  db <- Tansu ask
+  Tansu $ inBase $ dbDel db (encode key)
 
 -- | Given a storage backend and a 'Tansu' computation, execute the
 --   sequence of 'get' and 'set' commands and produce either the value

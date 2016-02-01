@@ -25,6 +25,9 @@ ephemeralSet table key val = modifyIORef table (M.insert key val)
 ephemeralGet :: IORef Table -> ByteString -> IO (Maybe ByteString)
 ephemeralGet table key = M.lookup key `fmap` readIORef table
 
+ephemeralDel :: IORef Table -> ByteString -> IO ()
+ephemeralDel table key = modifyIORef table (M.delete key)
+
 -- | An 'EphemeralDb' is just an in-memory map, with no way of saving it.
 --   It is intended to be used for testing Tansu code.
 newtype EphemeralDb = EDB { fromEDB :: Table }
@@ -46,4 +49,5 @@ withEphemeralDb init comp = do
     { dbRunTransaction = ephemeralRunTransaction lock
     , dbSet = ephemeralSet table
     , dbGet = ephemeralGet table
+    , dbDel = ephemeralDel table
     }
