@@ -1,5 +1,5 @@
 module Database.Tansu ( Tansu
-                      , Database
+                      , TansuDb
                       , TansuError(..)
                       , get
                       , getMb
@@ -20,7 +20,7 @@ import MonadLib ( ReaderT
                 )
 import Database.Tansu.Internal
 
-type TansuM a = ReaderT Database (ExceptionT TansuError IO) a
+type TansuM a = ReaderT TansuDb (ExceptionT TansuError IO) a
 
 newtype Tansu a = Tansu { runTansu :: TansuM a }
 
@@ -59,6 +59,6 @@ getMb key = do
       Right val' -> return (Just val')
       Left err   -> Tansu (raise (DecodeError err))
 
-run :: Database -> Tansu a -> IO (Either TansuError a)
+run :: TansuDb -> Tansu a -> IO (Either TansuError a)
 run db (Tansu comp) =
   dbRunTransaction db (runExceptionT (runReaderT db comp))

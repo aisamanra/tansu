@@ -13,7 +13,7 @@ main = do
   putStrLn "Testing ephemeral db"
   withEphemeralDb sample
 
-sample :: Database -> IO ()
+sample :: TansuDb -> IO ()
 sample db = do
   putStrLn "Populating test database"
   run db $ do

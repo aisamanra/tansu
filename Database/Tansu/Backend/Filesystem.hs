@@ -3,7 +3,7 @@ module Database.Tansu.Backend.Filesystem (withFilesystemDb) where
 import Data.ByteString (ByteString)
 import Data.ByteString.Base64
 import qualified Data.ByteString.Char8 as BS
-import Database.Tansu.Internal (Database(..))
+import Database.Tansu.Internal (TansuDb(..))
 import System.Directory (createDirectoryIfMissing, doesFileExist)
 import System.FileLock (SharedExclusive(Exclusive), withFileLock)
 import System.FilePath.Posix ((</>))
@@ -25,10 +25,10 @@ filePathLock :: FilePath -> IO a -> IO a
 filePathLock path comp = do
   withFileLock (path </> ".lock") Exclusive (const comp)
 
-withFilesystemDb :: FilePath -> (Database -> IO a) -> IO a
+withFilesystemDb :: FilePath -> (TansuDb -> IO a) -> IO a
 withFilesystemDb path comp = do
   createDirectoryIfMissing True path
-  comp $ Database { dbSet            = filePathSet path
-                  , dbGet            = filePathGet path
-                  , dbRunTransaction = filePathLock path
-                  }
+  comp $ TansuDb { dbSet            = filePathSet path
+                 , dbGet            = filePathGet path
+                 , dbRunTransaction = filePathLock path
+                 }

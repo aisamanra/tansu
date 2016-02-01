@@ -1,6 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
 
-module Database.Tansu.Internal ( Database(..)
+module Database.Tansu.Internal ( TansuDb(..)
                                , TansuError(..)
                                ) where
 
@@ -11,7 +11,7 @@ data TansuError
   | DecodeError String
     deriving (Eq, Show)
 
-data Database = Database
+data TansuDb = TansuDb
   { dbSet            :: ByteString -> ByteString -> IO ()
   , dbGet            :: ByteString -> IO (Maybe ByteString)
   , dbRunTransaction :: forall a. IO a -> IO a

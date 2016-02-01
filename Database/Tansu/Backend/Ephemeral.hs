@@ -5,7 +5,7 @@ import Control.Concurrent.MVar
 import Data.ByteString (ByteString)
 import Data.IORef
 import qualified Data.Map.Strict as M
-import Database.Tansu.Internal (Database(..))
+import Database.Tansu.Internal (TansuDb(..))
 
 type Table = M.Map ByteString ByteString
 
@@ -18,11 +18,11 @@ ephemeralSet table key val = modifyIORef table (M.insert key val)
 ephemeralGet :: IORef Table -> ByteString -> IO (Maybe ByteString)
 ephemeralGet table key = M.lookup key `fmap` readIORef table
 
-withEphemeralDb :: (Database -> IO a) -> IO a
+withEphemeralDb :: (TansuDb -> IO a) -> IO a
 withEphemeralDb comp = do
   lock  <- newMVar ()
   table <- newIORef M.empty
-  comp $ Database
+  comp $ TansuDb
     { dbRunTransaction = ephemeralRunTransaction lock
     , dbSet = ephemeralSet table
     , dbGet = ephemeralGet table
