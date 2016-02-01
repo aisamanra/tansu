@@ -11,7 +11,7 @@ main = do
   withFilesystemDb "sample.db" sample
 
   putStrLn "Testing ephemeral db"
-  withEphemeralDb sample
+  withNewEphemeralDb sample
 
 sample :: TansuDb -> IO ()
 sample db = do
