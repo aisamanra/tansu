@@ -68,7 +68,7 @@ getMb :: (Serialize k, Serialize v) => k -> Tansu k v (Maybe v)
 del   :: (Serialize k) => k -> Tansu k v ()
 
 -- run a Tansu computation
-run   :: TansuDb -> Tansu k v a -> IO (Either TansuError a)
+run   :: TansuDb k v -> Tansu k v a -> IO (Either TansuError a)
 ~~~
 
 A value of type `TansuDb` should be supplied by a _backend_, which can
@@ -79,6 +79,10 @@ all, and another that naïvely stores the key-value mapping as files in a
 local directory. However, `tansu` is designed in such a way that storage
 backends can be simply implemented separately from the core `tansu`
 library, and backends can be easily swapped out as desired.
+
+## Tansu Backends
+
+[...]
 
 ## About the Name
 

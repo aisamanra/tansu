@@ -43,11 +43,11 @@ createEphemeralDb :: (Serialize k, Serialize v) => [(k, v)] -> EphemeralDb
 createEphemeralDb ls = EDB (M.fromList [ (encode k, encode v) | (k, v) <- ls ])
 
 -- | Run a 'Tansu' operation with an empty in-memory table.
-withNewEphemeralDb :: (TansuDb -> IO a) -> IO a
+withNewEphemeralDb :: (TansuDb k v -> IO a) -> IO a
 withNewEphemeralDb = withEphemeralDb $ EDB M.empty
 
 -- | Run a 'Tansu' operation with an existing in-memory table.
-withEphemeralDb :: EphemeralDb -> (TansuDb -> IO a) -> IO a
+withEphemeralDb :: EphemeralDb -> (TansuDb k v -> IO a) -> IO a
 withEphemeralDb init comp = do
   lock  <- newMVar ()
   table <- newIORef (fromEDB init)

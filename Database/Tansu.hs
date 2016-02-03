@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+
 module Database.Tansu ( -- * The 'Tansu' monad
                         Tansu
                       , TansuDb
@@ -24,14 +26,14 @@ import MonadLib ( ReaderT
                 )
 import Database.Tansu.Internal
 
-type TansuM a = ReaderT TansuDb (ExceptionT TansuError IO) a
+type TansuM k v a = ReaderT (TansuDb k v) (ExceptionT TansuError IO) a
 
 -- | The 'Tansu' type is a monad which represents some sequence
 --   of 'get' and 'set' operations. Ideally, backends should
 --   make some guarantee about the atomicity of a given
 --   'Tansu' computation, but you should consult the documentation
 --   about a given backend to make sure that holds.
-newtype Tansu k v a = Tansu { runTansu :: TansuM a }
+newtype Tansu k v a = Tansu { runTansu :: TansuM k v a }
 
 instance Functor (Tansu k v) where
   fmap f (Tansu t) = Tansu (fmap f t)
@@ -94,6 +96,6 @@ del key = do
 -- | Given a storage backend and a 'Tansu' computation, execute the
 --   sequence of 'get' and 'set' commands and produce either the value
 --   or the error encountered while running the computation.
-run :: TansuDb -> Tansu k v a -> IO (Either TansuError a)
+run :: TansuDb k v -> Tansu k v a -> IO (Either TansuError a)
 run db (Tansu comp) =
   dbRunTransaction db (runExceptionT (runReaderT db comp))
