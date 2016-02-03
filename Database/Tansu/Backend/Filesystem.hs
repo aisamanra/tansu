@@ -1,9 +1,10 @@
 module Database.Tansu.Backend.Filesystem (withFilesystemDb) where
 
+import Control.Exception
 import Data.ByteString (ByteString)
 import Data.ByteString.Base64
 import qualified Data.ByteString.Char8 as BS
-import Database.Tansu.Internal (TansuDb(..))
+import Database.Tansu.Internal
 import System.Directory ( createDirectoryIfMissing
                         , doesFileExist
                         , removeFile
@@ -11,23 +12,28 @@ import System.Directory ( createDirectoryIfMissing
 import System.FileLock (SharedExclusive(Exclusive), withFileLock)
 import System.FilePath.Posix ((</>))
 
-filePathSet :: FilePath -> ByteString -> ByteString -> IO ()
+catchIO :: IO a -> IO (Either TansuError a)
+catchIO mote = fmap return mote `catch` go
+  where go :: IOException -> IO (Either TansuError a)
+        go = return . Left . OtherError . show
+
+filePathSet :: FilePath -> ByteString -> ByteString -> IO (Either TansuError ())
 filePathSet path key val = do
   let keyPath = path </> BS.unpack (encode key)
-  BS.writeFile keyPath val
+  catchIO $ BS.writeFile keyPath val
 
-filePathGet :: FilePath -> ByteString -> IO (Maybe ByteString)
+filePathGet :: FilePath -> ByteString -> IO (Either TansuError ByteString)
 filePathGet path key = do
   let keyPath = path </> BS.unpack (encode key)
   exists <- doesFileExist keyPath
   if exists
-    then Just `fmap` BS.readFile keyPath
-    else return Nothing
+    then Right `fmap` BS.readFile keyPath
+    else return (Left (KeyNotFound key))
 
-filePathDel :: FilePath -> ByteString -> IO ()
+filePathDel :: FilePath -> ByteString -> IO (Either TansuError ())
 filePathDel path key = do
   let keyPath = path </> BS.unpack (encode key)
-  removeFile keyPath
+  catchIO $ removeFile keyPath
 
 filePathLock :: FilePath -> IO a -> IO a
 filePathLock path comp = do

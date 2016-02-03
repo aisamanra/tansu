@@ -12,21 +12,27 @@ import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import           Data.Serialize (Serialize, encode)
 import Database.Tansu (Tansu)
-import Database.Tansu.Internal (TansuDb(..))
+import Database.Tansu.Internal
 
 type Table = M.Map ByteString ByteString
 
 ephemeralRunTransaction :: MVar () -> IO a -> IO a
 ephemeralRunTransaction lock comp = withMVar lock $ \ () -> comp
 
-ephemeralSet :: IORef Table -> ByteString -> ByteString -> IO ()
-ephemeralSet table key val = modifyIORef table (M.insert key val)
+ephemeralSet :: IORef Table -> ByteString -> ByteString -> IO (Either TansuError ())
+ephemeralSet table key val =
+  fmap return $ modifyIORef table (M.insert key val)
 
-ephemeralGet :: IORef Table -> ByteString -> IO (Maybe ByteString)
-ephemeralGet table key = M.lookup key `fmap` readIORef table
+ephemeralGet :: IORef Table -> ByteString -> IO (Either TansuError ByteString)
+ephemeralGet table key = do
+  rs <- M.lookup key `fmap` readIORef table
+  case rs of
+    Just x  -> return (return x)
+    Nothing -> return (Left (KeyNotFound key))
 
-ephemeralDel :: IORef Table -> ByteString -> IO ()
-ephemeralDel table key = modifyIORef table (M.delete key)
+ephemeralDel :: IORef Table -> ByteString -> IO (Either TansuError ())
+ephemeralDel table key =
+  fmap return $ modifyIORef table (M.delete key)
 
 -- | An 'EphemeralDb' is just an in-memory map, with no way of saving it.
 --   It is intended to be used for testing Tansu code.

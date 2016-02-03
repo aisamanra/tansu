@@ -43,11 +43,18 @@ instance Applicative (Tansu k v) where
 instance Monad (Tansu k v) where
   Tansu x >>= f = Tansu (x >>= runTansu . f)
 
+propagate :: IO (Either TansuError a) -> Tansu k v a
+propagate mote = do
+  rs <- Tansu $ inBase $ mote
+  case rs of
+    Left err -> Tansu $ raise err
+    Right x  -> return x
+
 -- | Sets the value for a key to a value.
 set :: (Serialize k, Serialize v) => k -> v -> Tansu k v ()
 set key val = do
   db <- Tansu ask
-  Tansu $ inBase $ dbSet db (encode key) (encode val)
+  propagate $ dbSet db (encode key) (encode val)
 
 -- | Sets the value for a key to a value. A convenience operator
 --   that is identical to 'set'.
@@ -73,15 +80,16 @@ getMb key = do
   db <- Tansu ask
   result <- Tansu $ inBase $ dbGet db (encode key)
   case result of
-    Nothing -> return Nothing
-    Just bs -> case decode bs of
+    Left (KeyNotFound _) -> return Nothing
+    Left err             -> Tansu (raise err)
+    Right bs -> case decode bs of
       Right val' -> return (Just val')
       Left err   -> Tansu (raise (DecodeError err))
 
 del :: (Serialize k) => k -> Tansu k v ()
 del key = do
   db <- Tansu ask
-  Tansu $ inBase $ dbDel db (encode key)
+  propagate $ dbDel db (encode key)
 
 -- | Given a storage backend and a 'Tansu' computation, execute the
 --   sequence of 'get' and 'set' commands and produce either the value

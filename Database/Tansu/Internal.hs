@@ -24,8 +24,8 @@ data TansuError
 --   is exposed by the "Database.Tansu.Internal" module so that
 --   other libraries can implement new storage backends.
 data TansuDb = TansuDb
-  { dbSet            :: ByteString -> ByteString -> IO ()
-  , dbGet            :: ByteString -> IO (Maybe ByteString)
-  , dbDel            :: ByteString -> IO ()
+  { dbSet            :: ByteString -> ByteString -> IO (Either TansuError ())
+  , dbGet            :: ByteString -> IO (Either TansuError ByteString)
+  , dbDel            :: ByteString -> IO (Either TansuError ())
   , dbRunTransaction :: forall a. IO a -> IO a
   }
