@@ -28,8 +28,8 @@ data Person = Person { name :: String, age  :: Int }
 main :: IO ()
 main = withFilesystemDb "sample.db" $ \ db -> do
   run db $ do
-    "alex"  =: Person "alex" 33
-    "blake" =: Person "blake" 22
+    "alex"  =: Person "Alex" 33
+    "blake" =: Person "Blake" 22
 
   Right age <- run db (age `fmap` get "blake")
   putStrLn $ "Blake's age is " ++ show age
@@ -41,8 +41,8 @@ The Tansu API is very small and simple. All keys and values must implement
 the `Serialize` typeclass from the
 [`cereal`](https://hackage.haskell.org/package/cereal)
 library. No type information is saved in the key-value store, so care must
-be taken to ensure that the correct deserializer is being used when a value
-is extracted from the backing store.
+be taken to ensure that the correct types are used in creating a `Tansu`
+computation.
 
 A value of type `TansuDb` represents a given key-value mapping. The only
 way to interact with a `TansuDb` is by running a `Tansu` command, which
@@ -53,22 +53,22 @@ command, and deleted using the `del` command.
 
 ~~~.haskell
 -- set a key to a value
-set   :: (Serialize k, Serialize v) => k -> v -> Tansu ()
+set   :: (Serialize k, Serialize v) => k -> v -> Tansu k v ()
 
 -- infix alias for set
-(=:)  :: (Serialize k, Serialize v) => k -> v -> Tansu ()
+(=:)  :: (Serialize k, Serialize v) => k -> v -> Tansu k v ()
 
 -- get a value, failing if it does not exist
-get   :: (Serialize k, Serialize v) => k -> Tansu v
+get   :: (Serialize k, Serialize v) => k -> Tansu k v v
 
 -- get a value, returning Nothing if it does not exist
-getMb :: (Serialize k, Serialize v) => k -> Tansu (Maybe v)
+getMb :: (Serialize k, Serialize v) => k -> Tansu k v (Maybe v)
 
 -- remove a key and its associated value
-del   :: (Serialize k) => k -> Tansu ()
+del   :: (Serialize k) => k -> Tansu k v ()
 
 -- run a Tansu computation
-run   :: TansuDb -> Tansu a -> IO (Either TansuError a)
+run   :: TansuDb -> Tansu k v a -> IO (Either TansuError a)
 ~~~
 
 A value of type `TansuDb` should be supplied by a _backend_, which can

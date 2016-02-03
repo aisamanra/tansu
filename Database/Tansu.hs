@@ -31,32 +31,32 @@ type TansuM a = ReaderT TansuDb (ExceptionT TansuError IO) a
 --   make some guarantee about the atomicity of a given
 --   'Tansu' computation, but you should consult the documentation
 --   about a given backend to make sure that holds.
-newtype Tansu a = Tansu { runTansu :: TansuM a }
+newtype Tansu k v a = Tansu { runTansu :: TansuM a }
 
-instance Functor Tansu where
+instance Functor (Tansu k v) where
   fmap f (Tansu t) = Tansu (fmap f t)
 
-instance Applicative Tansu where
+instance Applicative (Tansu k v) where
   pure = Tansu . pure
   Tansu f <*> Tansu x = Tansu (f <*> x)
 
-instance Monad Tansu where
+instance Monad (Tansu k v) where
   Tansu x >>= f = Tansu (x >>= runTansu . f)
 
 -- | Sets the value for a key to a value.
-set :: (Serialize k, Serialize v) => k -> v -> Tansu ()
+set :: (Serialize k, Serialize v) => k -> v -> Tansu k v ()
 set key val = do
   db <- Tansu ask
   Tansu $ inBase $ dbSet db (encode key) (encode val)
 
 -- | Sets the value for a key to a value. A convenience operator
 --   that is identical to 'set'.
-(=:) :: (Serialize k, Serialize v) => k -> v -> Tansu ()
+(=:) :: (Serialize k, Serialize v) => k -> v -> Tansu k v ()
 (=:) = set
 
 -- | Gets a value for a given key. The resulting 'Tansu' computation
 --   will fail if the key is not present in the storage backend.
-get :: (Serialize k, Serialize v) => k -> Tansu v
+get :: (Serialize k, Serialize v) => k -> Tansu k v v
 get key = do
   result <- getMb key
   case result of
@@ -68,7 +68,7 @@ get key = do
 --   as problems decoding the serialized value or difficulties
 --   communicating with the storage backend, will still cause the
 --   'Tansu' computation to fail.
-getMb :: (Serialize k, Serialize v) => k -> Tansu (Maybe v)
+getMb :: (Serialize k, Serialize v) => k -> Tansu k v (Maybe v)
 getMb key = do
   db <- Tansu ask
   result <- Tansu $ inBase $ dbGet db (encode key)
@@ -78,7 +78,7 @@ getMb key = do
       Right val' -> return (Just val')
       Left err   -> Tansu (raise (DecodeError err))
 
-del :: (Serialize k) => k -> Tansu ()
+del :: (Serialize k) => k -> Tansu k v ()
 del key = do
   db <- Tansu ask
   Tansu $ inBase $ dbDel db (encode key)
@@ -86,6 +86,6 @@ del key = do
 -- | Given a storage backend and a 'Tansu' computation, execute the
 --   sequence of 'get' and 'set' commands and produce either the value
 --   or the error encountered while running the computation.
-run :: TansuDb -> Tansu a -> IO (Either TansuError a)
+run :: TansuDb -> Tansu k v a -> IO (Either TansuError a)
 run db (Tansu comp) =
   dbRunTransaction db (runExceptionT (runReaderT db comp))
