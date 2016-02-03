@@ -15,11 +15,13 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Database.Tansu,
                        Database.Tansu.Internal,
+                       Database.Tansu.RawString,
                        Database.Tansu.Backend.Filesystem,
                        Database.Tansu.Backend.Ephemeral
   build-depends:       base >=4.8 && <4.9,
                        bytestring,
                        cereal,
+                       deepseq,
                        monadLib,
                        directory,
                        filepath,
