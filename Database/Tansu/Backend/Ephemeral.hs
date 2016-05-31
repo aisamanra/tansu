@@ -10,11 +10,10 @@ import Data.ByteString (ByteString)
 import Data.IORef
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
-import           Data.Serialize (Serialize, encode)
 import Database.Tansu (Tansu)
 import Database.Tansu.Internal
 
-type Table = M.Map ByteString ByteString
+type Table = Map ByteString ByteString
 
 ephemeralRunTransaction :: MVar () -> IO a -> IO a
 ephemeralRunTransaction lock comp = withMVar lock $ \ () -> comp
@@ -39,15 +38,15 @@ ephemeralDel table key =
 newtype EphemeralDb = EDB { fromEDB :: Table }
 
 -- | Create an in-memory table to use for testing.
-createEphemeralDb :: (Serialize k, Serialize v) => [(k, v)] -> EphemeralDb
-createEphemeralDb ls = EDB (M.fromList [ (encode k, encode v) | (k, v) <- ls ])
+createEphemeralDb :: [(ByteString, ByteString)] -> EphemeralDb
+createEphemeralDb = EDB . M.fromList
 
 -- | Run a 'Tansu' operation with an empty in-memory table.
-withNewEphemeralDb :: (TansuDb k v -> IO a) -> IO a
+withNewEphemeralDb :: (TansuDb -> IO a) -> IO a
 withNewEphemeralDb = withEphemeralDb $ EDB M.empty
 
 -- | Run a 'Tansu' operation with an existing in-memory table.
-withEphemeralDb :: EphemeralDb -> (TansuDb k v -> IO a) -> IO a
+withEphemeralDb :: EphemeralDb -> (TansuDb -> IO a) -> IO a
 withEphemeralDb init comp = do
   lock  <- newMVar ()
   table <- newIORef (fromEDB init)

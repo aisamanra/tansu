@@ -46,7 +46,7 @@ filePathLock path comp = do
 --   @.lock@ file in the specified directory, but note that
 --   file locking is not a guaranteed way of ensuring exclusion,
 --   and that the files themselves are not locked in any way.
-withFilesystemDb :: FilePath -> (TansuDb k v -> IO a) -> IO a
+withFilesystemDb :: FilePath -> (TansuDb -> IO a) -> IO a
 withFilesystemDb path comp = do
   createDirectoryIfMissing True path
   comp $ TansuDb { dbSet            = filePathSet path

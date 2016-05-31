@@ -23,9 +23,7 @@ data TansuError
 --   should treat this as an abstract type, but the full definition
 --   is exposed by the "Database.Tansu.Internal" module so that
 --   other libraries can implement new storage backends.
---
---   A given instantiation of the database will have 
-data TansuDb k v = TansuDb
+data TansuDb = TansuDb
   { dbSet            :: ByteString -> ByteString -> IO (Either TansuError ())
   , dbGet            :: ByteString -> IO (Either TansuError ByteString)
   , dbDel            :: ByteString -> IO (Either TansuError ())

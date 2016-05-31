@@ -6,18 +6,28 @@ license:             BSD3
 license-file:        LICENSE
 author:              Getty Ritter
 maintainer:          gettylefou@gmail.com
--- copyright:
+copyright:           © 2016 Getty Ritter
 category:            Database
 build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
+source-repository head
+  type: git
+  location: git://github.com/aisamanra/tansu.git
+
+flag build-examples
+  description: Build example applications
+  default:     False
+
 library
   exposed-modules:     Database.Tansu,
                        Database.Tansu.Internal,
-                       Database.Tansu.RawString,
+                       Database.Tansu.Serialize,
+                       Database.Tansu.Backend.Ephemeral,
                        Database.Tansu.Backend.Filesystem,
-                       Database.Tansu.Backend.Ephemeral
+                       Database.Tansu.Backend.Filesystem.Raw
+  other-modules:       Database.Tansu.Monad
   build-depends:       base >=4.8 && <4.9,
                        bytestring,
                        cereal,
@@ -30,8 +40,19 @@ library
                        filelock
   default-language:    Haskell2010
 
-executable sample
+executable sample1
+  if !flag(build-examples)
+    buildable: False
   main-is: Main.hs
   build-depends: base, tansu
-  hs-source-dirs: sample
+  hs-source-dirs: sample1
+  default-language: Haskell2010
+
+
+executable sample2
+  if !flag(build-examples)
+    buildable: False
+  main-is: Main.hs
+  build-depends: base, tansu, cereal
+  hs-source-dirs: sample2
   default-language: Haskell2010

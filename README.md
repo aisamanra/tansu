@@ -5,9 +5,10 @@ untested, very much not finished, and I reserve the right to modify it
 in part or in total at any time.
 
 The Tansu library is a minimal API for storing and recalling data in
-key-value storage backends. The Tansu library does not intend to be useful
-for working with pre-existing data, as it makes assumptions about the
-formatting of keys and values.
+key-value storage backends. It is designed for new applications that
+have flexibility in terms of how they store information, as it may
+not provide the appropriate tools for working with data in existing
+key-value store backends.
 
 ## Example
 
@@ -19,15 +20,15 @@ module Main where
 import Data.Serialize (Serialize)
 import GHC.Generics (Generic)
 
-import Database.Tansu ((=:), get, run)
+import Database.Tansu.Serialize ((=:), get, runS, serialized)
 import Database.Tansu.Backend.Filesystem (withFilesystemDb)
 
 data Person = Person { name :: String, age  :: Int }
   deriving (Eq, Show, Generic, Serialize)
 
 main :: IO ()
-main = withFilesystemDb "sample.db" $ \ db -> do
-  run db $ do
+main = withFilesystemDb "sample.db" $ serialized $ \ db -> do
+  runS db $ do
     "alex"  =: Person "Alex" 33
     "blake" =: Person "Blake" 22
 
@@ -37,12 +38,12 @@ main = withFilesystemDb "sample.db" $ \ db -> do
 
 ## Use
 
-The Tansu API is very small and simple. All keys and values must implement
-the `Serialize` typeclass from the
-[`cereal`](https://hackage.haskell.org/package/cereal)
-library. No type information is saved in the key-value store, so care must
-be taken to ensure that the correct types are used in creating a `Tansu`
-computation.
+The `tansu` library exposes two near-identical APIs: the API
+in `Database.Tansu` allows you to store and write strict `ByteString`
+values, while the API in `Database.Tansu.Serialize` uses the typeclasses
+associated with the `cereal` library to allow a wider range of types to
+function as keys and values. The two libraries are otherwise very
+similar.
 
 A value of type `TansuDb` represents a given key-value mapping. The only
 way to interact with a `TansuDb` is by running a `Tansu` command, which
@@ -53,22 +54,22 @@ command, and deleted using the `del` command.
 
 ~~~.haskell
 -- set a key to a value
-set   :: (Serialize k, Serialize v) => k -> v -> Tansu k v ()
+set   :: ByteString -> ByteString -> Tansu ()
 
 -- infix alias for set
-(=:)  :: (Serialize k, Serialize v) => k -> v -> Tansu k v ()
+(=:)  :: ByteString -> ByteString -> Tansu ()
 
 -- get a value, failing if it does not exist
-get   :: (Serialize k, Serialize v) => k -> Tansu k v v
+get   :: ByteString -> Tansu ByteString
 
 -- get a value, returning Nothing if it does not exist
-getMb :: (Serialize k, Serialize v) => k -> Tansu k v (Maybe v)
+getMb :: ByteString -> Tansu (Maybe ByteString)
 
 -- remove a key and its associated value
-del   :: (Serialize k) => k -> Tansu k v ()
+del   :: ByteString -> Tansu ()
 
 -- run a Tansu computation
-run   :: TansuDb k v -> Tansu k v a -> IO (Either TansuError a)
+run   :: TansuDb -> Tansu a -> IO (Either TansuError a)
 ~~~
 
 A value of type `TansuDb` should be supplied by a _backend_, which can
@@ -91,4 +92,4 @@ A _tansu_ is a kind of
 and the initial plan for the _tansu_ library was for it to be a convenient
 API wrapper over the [Kyoto Cabinet](http://fallabs.com/kyotocabinet/)
 library, but it has since become a generic wrapper over various
-key-value mapping backends. It is still a kind of storage system.
+key-value mapping backends.

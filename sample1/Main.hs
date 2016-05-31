@@ -1,19 +1,25 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
 import Control.Monad (void)
 import Database.Tansu
-import Database.Tansu.Backend.Filesystem
 import Database.Tansu.Backend.Ephemeral
+import Database.Tansu.Backend.Filesystem
+import Database.Tansu.Backend.Filesystem.Raw
 
 main :: IO ()
 main = do
   putStrLn "Testing filesystem db"
-  withFilesystemDb "sample.db" sample
+  withFilesystemDb "sample-fs.db" sample
+
+  putStrLn "Testing raw filesystem db"
+  withRawFilesystemDb "sample-raw.db" sample
 
   putStrLn "Testing ephemeral db"
   withNewEphemeralDb sample
 
-sample :: TansuDb String String -> IO ()
+sample :: TansuDb -> IO ()
 sample db = do
   putStrLn "Populating test database"
   run db $ do
@@ -25,11 +31,11 @@ sample db = do
   putStr "looking up key 'three': "
   rs <- run db $ get "three"
   case rs of
-    Right val -> putStrLn val
+    Right val -> print val
     Left _    -> putStrLn "...not in the database."
 
   putStr "looking up key 'five': "
   rs <- run db $ get "five"
   case rs of
-    Right val -> putStrLn val
+    Right val -> print val
     Left _    -> putStrLn "...not in the database."
